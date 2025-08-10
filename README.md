@@ -1,0 +1,2 @@
+# hunyuan3d_endpoint
+hunyuan3dのRunpod向けレポジトリ
