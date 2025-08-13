@@ -19,13 +19,16 @@ source .venv/bin/activate
 ## On Windows:
 .venv\Scripts\activate
 
-# 3. RunPod SDK をインストールする
-pip install runpod
+# 3. 依存関係 をインストールする
+pip install -r requirements.txt
 
 # 4. スクリプトをローカルで実行する
-スクリプトは、自動的に test_input.json を入力として読み込み、 handler関数にイベントとして渡します。
-
 python3 rp_handler.py
+
+# 5. Githubからワーカーをデプロイする
+Runpod の GitHub 統合の仕組みを使用し、GithubからコードとDockerfileを取得して、コンテナイメージを構築し、Runpodのコンテナレジストリに保存して、エンドポイントにデプロイします。
+
+詳細は[こちら](https://docs.runpod.io/serverless/workers/github-integration)
 
 # Docker imageをビルドする
 docker build -t your-dockerhub-username/your-image-name:v1.0.0 --platform linux/amd64 .
