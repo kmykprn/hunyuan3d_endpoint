@@ -8,30 +8,43 @@ hunyuan3dのRunpod向けレポジトリ
 このコードにより、Docker imageをサーバレスエンドポイントにデプロイすることができます。エンドポイントにリクエストが到達すると、ワーカーが起動し、rp_handler.pyに記載されているコードが実行されます。
 
 
-実行方法
-# 1. Pythonの仮想環境を作成する
+## 実行方法
+### 1. Pythonの仮想環境を作成する
 python3 -m venv .venv
 
-# 2. 仮想環境を起動する
-## On macOS/Linux:
+### 2. 仮想環境を起動する
+#### On macOS/Linux:
 source .venv/bin/activate
 
-## On Windows:
+#### On Windows:
 .venv\Scripts\activate
 
-# 3. 依存関係 をインストールする
+### 3. 依存関係 をインストールする
 pip install -r requirements.txt
 
-# 4. スクリプトをローカルで実行する
+### 4. スクリプトをローカルで実行する
 python3 rp_handler.py
 
-# 5. Githubからワーカーをデプロイする
+### 5. Githubからワーカーをデプロイする
 Runpod の GitHub 統合の仕組みを使用し、GithubからコードとDockerfileを取得して、コンテナイメージを構築し、Runpodのコンテナレジストリに保存して、エンドポイントにデプロイします。
 
 詳細は[こちら](https://docs.runpod.io/serverless/workers/github-integration)
 
-# Docker imageをビルドする
-docker build -t your-dockerhub-username/your-image-name:v1.0.0 --platform linux/amd64 .
+備考：
+Environment Variablesで以下のように設定する（事前にSecretsへSYNEXA＿API_KEYの登録が必要）
+![alt text](assets/image.png)
 
-# docker hubにイメージをpushする
-docker push your-dockerhub-username/your-image-name:v1.0.0
+### 6. リクエストをpodrun上で試す
+PodrunのRequestタブで以下を入力して実行
+```
+{
+  "input": {
+    "image_path": "https://synexa.s3.us-east-005.backblazeb2.com/models/tencent-hunyuan3d-2-demo.png",
+    "prompt": "",
+    "timeout": 300
+  }
+}
+```
+
+### 備考：ログを確認する
+PodrunのLogsタブで確認する
