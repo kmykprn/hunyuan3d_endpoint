@@ -83,6 +83,8 @@ def create_3d_model(input_data):
     
 
 def handler(event):
+    log.info("ジョブを受信しました。")
+
     input_data = event['input']
     action = input_data['action']
     
@@ -92,24 +94,27 @@ def handler(event):
             tmp_dir, glb_url, textures_url = create_3d_model(input_data=input_data)
 
             # 成功時のレスポンス
+            log.info("処理が正常に完了しました。")
             return {
+                "status": "success",
                 "glb_url": glb_url,
                 "textures_url": textures_url
             }
         
         except Exception as e:
             # エラー時のレスポンス（RunPod推奨形式）
-            return {
-                "error": str(e)
-            }
+            log.error(f"エラーが発生しました: {str(e)}")
+            return {"status": "error", "message": str(e)}
 
         finally:
             # 一時ファイルのクリーンアップ
             if tmp_dir:
                 try:
                     clean(folder_list=[tmp_dir])
+                    log.info("ファイル削除が正常に完了しました。")
                 except:
                     # クリーンアップの失敗は無視
+                    log.error(f"エラーが発生しました: {str(e)}")
                     pass
     
     elif action == "delete":
