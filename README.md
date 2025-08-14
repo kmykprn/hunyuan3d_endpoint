@@ -46,5 +46,26 @@ PodrunのRequestタブで以下を入力して実行
 }
 ```
 
+### (オプション)ローカルでdockerイメージをビルドして試す
+ビルド
+```
+docker build --platform linux/amd64 --tag kmykprn/serverless-test .
+```
+
+コンテナを立てる
+```
+docker run -it kmykprn/serverless-test:latest /bin/bash
+```
+
+環境変数をexportする
+```
+export SYNEXA_API_KEY=xxx(.envに記載の内容)
+```
+
+実行する
+```
+python3 -u rp_handler.py
+```
+
 ### 備考：ログを確認する
 PodrunのLogsタブで確認する
