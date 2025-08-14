@@ -2,6 +2,8 @@
     "input": {
         "image_path": "https://synexa.s3.us-east-005.backblazeb2.com/models/tencent-hunyuan3d-2-demo.png",
         "prompt": "",
-        "timeout": 300
+        "timeout": 300,
+        "urls": ["simulated_uploaded/1a001737.png"],
+        "action": "create"
     }
 }
