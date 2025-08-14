@@ -52,14 +52,17 @@ PodrunのRequestタブで以下を入力して実行
 docker build --platform linux/amd64 --tag kmykprn/serverless-test .
 ```
 
-コンテナを立てる
+コンテナを立てる（ローカル実行時）
 ```
-docker run -it kmykprn/serverless-test:latest /bin/bash
+docker run -it --rm \
+  -v $(pwd)/test_input.json:/test_input.json \
+  -v $(pwd)/.env:/.env \
+  kmykprn/serverless-test /bin/bash
 ```
 
-環境変数をexportする
+環境変数を読み込む
 ```
-export SYNEXA_API_KEY=xxx(.envに記載の内容)
+source .env
 ```
 
 実行する
