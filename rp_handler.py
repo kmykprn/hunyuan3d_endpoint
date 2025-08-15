@@ -1,9 +1,8 @@
 import os
 import runpod
 from runpod import RunPodLogger
-from pipeline.postprocess import postprocess
-from utils.s3_utlis import remove_textures_file
 from runpod.serverless.utils.rp_cleanup import clean
+from utils.glb_utils import fetch_glb_from_url, extract_texture_from_glb, encode_textures_to_base64
 
 log = RunPodLogger()
 
@@ -24,7 +23,7 @@ import synexa
 client = synexa.Synexa(api_key=api_key)
 
 
-def create_3d_model(input_data):
+def fetch_3d_model(input_data) -> str:
     """
     外部APIから3Dモデルを取得する
     
@@ -36,8 +35,7 @@ def create_3d_model(input_data):
         }
     
     Returns:
-        成功時: {"glb_url": str, "textures": list}
-        エラー時: {"error": str}
+        glb_url: glbファイルのURL
     """
 
     # 入力値を取得
@@ -66,21 +64,20 @@ def create_3d_model(input_data):
         wait=timeout
     )
     
-    # GLBファイルURLを取得
+    # GLBファイルURLを返却
     glb_url = None
     for f in output:
         if 'textured_mesh' in f.url:
             glb_url = f.url
-            break
+            return glb_url
     
+    # GLBファイルURLが見つからない場合は異常終了
     if not glb_url:
+        log.error("テクスチャ付メッシュ生成のAPIに失敗しました")
         raise ValueError("No textured mesh found in API response")
+    
+    return ""
 
-    # GLBファイルをダウンロードし、GLBファイル内のテクスチャをAWS S3に保存する
-    tmp_dir, textures_url = postprocess(glb_url)
-    
-    return tmp_dir, glb_url, textures_url
-    
 
 def handler(event):
     log.info("ジョブを受信しました。")
@@ -89,16 +86,26 @@ def handler(event):
     action = input_data['action']
     
     if action == "create":
-        tmp_dir = None
+        glb_dir = None
         try:
-            tmp_dir, glb_url, textures_url = create_3d_model(input_data=input_data)
+            # glbファイルのurlを取得
+            glb_url = fetch_3d_model(input_data=input_data)
+            
+            # URLからglbファイルを取得し、ディレクトリに保存
+            glb_dir, glb_filename = fetch_glb_from_url(glb_url)
+            
+            # glbファイルからテクスチャを取り出し、glbファイルと同じ場所にpng形式で保存
+            textures_filename = extract_texture_from_glb(glb_dir=glb_dir, glb_filename=glb_filename)
+
+            # テクスチャファイルををBase64エンコード(glbファイル1つに対し、リスト形式でテクスチャを返却)
+            textures_base64_list = encode_textures_to_base64(textures_filename)
 
             # 成功時のレスポンス
             log.info("処理が正常に完了しました。")
             return {
                 "status": "success",
                 "glb_url": glb_url,
-                "textures_url": textures_url
+                "textures_url": textures_base64_list
             }
         
         except Exception as e:
@@ -108,27 +115,14 @@ def handler(event):
 
         finally:
             # 一時ファイルのクリーンアップ
-            if tmp_dir:
+            if glb_dir:
                 try:
-                    clean(folder_list=[tmp_dir])
+                    clean(folder_list=[glb_dir])
                     log.info("ファイル削除が正常に完了しました。")
                 except:
                     # クリーンアップの失敗は無視
                     log.error(f"エラーが発生しました: {str(e)}")
                     pass
-    
-    elif action == "delete":
-        # 指定されたS3のファイルを削除する
-        try:
-            url_list = input_data.get('urls', [])
-            remove_textures_file(url_list=url_list)
-            return {"status": "success", "deleted_urls": url_list}
-        except Exception as e:
-            return {
-                "error": str(e)
-            }
-    else:
-        return {"error": f"Unknown action: {action}"} 
 
 
 if __name__ == '__main__':
