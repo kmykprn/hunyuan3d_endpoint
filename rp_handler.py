@@ -2,7 +2,9 @@ import os
 import runpod
 from runpod import RunPodLogger
 from runpod.serverless.utils.rp_cleanup import clean
-from utils.glb_utils import fetch_glb_from_url, extract_texture_from_glb, encode_textures_to_base64
+from utils.boto3_upload_file import s3_file_upload
+from utils.boto3_delete_file import s3_delete_from_url
+from utils.glb_utils import fetch_glb_from_url, extract_texture_from_glb
 
 log = RunPodLogger()
 
@@ -95,17 +97,22 @@ def handler(event):
             glb_dir, glb_filename = fetch_glb_from_url(glb_url)
             
             # glbファイルからテクスチャを取り出し、glbファイルと同じ場所にpng形式で保存
-            textures_filename = extract_texture_from_glb(glb_dir=glb_dir, glb_filename=glb_filename)
+            textures_paths = extract_texture_from_glb(glb_dir=glb_dir, glb_filename=glb_filename)
 
-            # テクスチャファイルををBase64エンコード(glbファイル1つに対し、リスト形式でテクスチャを返却)
-            textures_base64_list = encode_textures_to_base64(textures_filename)
+            # テクスチャファイルをs3にアップロードし、ダウンロード用urlを取得
+            textures_urls = []
+            for path in textures_paths:
+                url = s3_file_upload(path)
+                if url is None:
+                    raise Exception(f"S3へのアップロードに失敗しました: {path}")
+                textures_urls.append(url)
 
             # 成功時のレスポンス
             log.info("処理が正常に完了しました。")
             return {
                 "status": "success",
                 "glb_url": glb_url,
-                "textures_url": textures_base64_list
+                "textures_url": textures_urls
             }
         
         except Exception as e:
@@ -123,6 +130,25 @@ def handler(event):
                     # クリーンアップの失敗は無視
                     log.error(f"エラーが発生しました: {str(e)}")
                     pass
+
+    elif action == "delete":
+        
+        try:
+            # 送信されてきたurlのファイルを削除
+            all_deleted = True
+            for url in input_data['urls']:
+                if not s3_delete_from_url(url):
+                    all_deleted = False
+                    log.error(f"ファイル削除に失敗しました: {url}")
+            
+            if all_deleted:
+                return {"status": "success", "message": "すべてのファイルが削除されました"}
+            else:
+                return {"status": "error", "message": "一部のファイルの削除に失敗しました"}
+        
+        except Exception as e:
+            log.error(f"ファイル削除処理でエラーが発生しました：{e}")
+            return {"status": "error", "message": str(e)}
 
 
 if __name__ == '__main__':
