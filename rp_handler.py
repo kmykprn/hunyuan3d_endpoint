@@ -105,7 +105,7 @@ def handler(event):
 
             key = generate_uuid(file_extension=file_extension)
             upload_url = s3utils.generate_upload_url_for_client(key=key)
-            return {"status": "success", "upload_url": upload_url, "key": key}
+            return {"upload_url": upload_url, "key": key}
 
         except Exception as e:
             log.error(f"アップロード用URL生成に失敗しました: {e}")
@@ -140,7 +140,6 @@ def handler(event):
             # 成功時のレスポンス
             log.info("処理が正常に完了しました。")
             return {
-                "status": "success",
                 "glb_url": glb_url,  # SYNEXA上のGLBファイルのURL
                 "textures_url": textures_urls,  # s3上のテクスチャのURL
                 "keys": keys,  # s3上のテクスチャのファイル名
@@ -175,7 +174,6 @@ def handler(event):
 
             if all_file_deleted:
                 return {
-                    "status": "success",
                     "message": "すべてのファイルが削除されました",
                 }
         except Exception as e:
