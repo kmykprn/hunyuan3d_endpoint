@@ -96,7 +96,14 @@ def handler(event):
     # クライアント用の画像アップロードURLを取得
     if action == "upload":
         try:
-            key = generate_uuid()
+            # クライアントから拡張子を受け取る（デフォルトは.png）
+            file_extension = input_data.get("upload_file_extension", ".png")
+
+            # 拡張子が.で始まっていない場合は追加
+            if not file_extension.startswith("."):
+                file_extension = f".{file_extension}"
+
+            key = generate_uuid(file_extension=file_extension)
             upload_url = s3utils.generate_upload_url_for_client(key=key)
             return {"status": "success", "upload_url": upload_url, "key": key}
 

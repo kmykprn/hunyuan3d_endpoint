@@ -4,6 +4,7 @@
         "prompt": "",
         "timeout": 300,
         "action": "create",
-        "urls": []
+        "keys": [],
+        "upload_file_extension": ".png"
     }
 }
