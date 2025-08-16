@@ -70,5 +70,10 @@ source .env
 python3 -u rp_handler.py
 ```
 
-### 備考：ログを確認する
-PodrunのLogsタブで確認する
+### 備考：
+- ログを確認する
+  - PodrunのLogsタブで確認する
+
+- precommitの使い方
+  - https://qiita.com/shun_sakamoto/items/23ba9341e6d5112f07cb
+
