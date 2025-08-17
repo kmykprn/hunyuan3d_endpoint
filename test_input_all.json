@@ -4,6 +4,8 @@
         "prompt": "",
         "timeout": 300,
         "action": "create",
+        "keys": [],
+        "upload_file_extension": ".png",
         "model_name": "triposr"
     }
 }
