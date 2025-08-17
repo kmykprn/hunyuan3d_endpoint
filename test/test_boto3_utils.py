@@ -17,14 +17,18 @@ def extract_base_url(full_url: str) -> str:
     return os.path.basename(parsed.path)
 
 
-def upload_file_to_presigned_url(file_path: str, upload_url: str) -> bool:
+def upload_file_to_presigned_url(
+    file_path: str, upload_url: str, content_type: str = "image/png"
+) -> bool:
     """事前署名URLにファイルをアップロード(フロント用機能が動作するかを確認する関数)"""
     try:
         with open(file_path, "rb") as f:
-            response = requests.put(upload_url, data=f)
+            # Content-Typeを指定してアップロード
+            headers = {"Content-Type": content_type}
+            response = requests.put(upload_url, data=f, headers=headers)
         return response.status_code == 200
     except Exception as e:
-        print(e)
+        print(f"Upload failed: {e}")
         return response.status_code == 500
 
 
@@ -60,14 +64,25 @@ def test_クライアントからs3にファイルアップロードするurlが
         事前承認済みURLにファイルがアップロードできること
     """
     # URLを作成
-    upload_url = s3utils.generate_upload_url_for_client(key=test_key)
+    upload_url = s3utils.generate_upload_url_for_client(
+        key=test_key, file_extension=".png"
+    )
     if upload_url:
         filename_on_s3 = extract_base_url(upload_url)
         assert filename_on_s3 == test_key
 
+    # 異なる拡張子の場合、アップロードに失敗することを確認
+    if upload_url:
+        upload_success = upload_file_to_presigned_url(
+            test_local_file, upload_url, content_type="image/jpg"
+        )
+        assert upload_success == False  # noqa: E712
+
     # URLにアップロードできるか確認
     if upload_url:
-        upload_success = upload_file_to_presigned_url(test_local_file, upload_url)
+        upload_success = upload_file_to_presigned_url(
+            test_local_file, upload_url, content_type="image/png"
+        )
         assert upload_success == True  # noqa: E712
 
     # クリーンアップ

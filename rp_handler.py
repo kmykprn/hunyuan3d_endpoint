@@ -104,7 +104,9 @@ def handler(event):
                 file_extension = f".{file_extension}"
 
             key = generate_uuid(file_extension=file_extension)
-            upload_url = s3utils.generate_upload_url_for_client(key=key)
+            upload_url = s3utils.generate_upload_url_for_client(
+                key=key, file_extension=file_extension
+            )
             return {"upload_url": upload_url, "key": key}
 
         except Exception as e:

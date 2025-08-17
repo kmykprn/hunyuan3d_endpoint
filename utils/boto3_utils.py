@@ -55,22 +55,38 @@ class S3Utils:
 
         return None
 
-    def generate_upload_url_for_client(self, key: str, minutes: int = 60):
+    def generate_upload_url_for_client(
+        self, key: str, file_extension: str, minutes: int = 60
+    ):
         """
         フロントエンド用：アップロード用の事前署名URLを生成
 
         Args:
             key: アップロード後の、s3上でのファイル名(uuid.pngを想定)
+            file_extension: ファイルの拡張子（.pngなど）。Content-typeの指定に使用。
             minutes: URLの有効期限(分)
 
         Returns:
             "upload_url": "アップロード用URL"
         """
+        # アップロードするファイルのタイプを指定
+        content_type_map = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+        }
+        content_type = content_type_map.get(file_extension, "application/octet-stream")
+
         try:
             # アップロード用事前署名URL
             upload_url = self.s3.generate_presigned_url(
                 "put_object",
-                Params={"Bucket": self.bucket, "Key": key},
+                Params={
+                    "Bucket": self.bucket,
+                    "Key": key,
+                    "ContentType": content_type,
+                },
                 ExpiresIn=minutes * 60,
             )
             return upload_url
