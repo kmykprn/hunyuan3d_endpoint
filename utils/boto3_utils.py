@@ -55,6 +55,28 @@ class S3Utils:
 
         return None
 
+    def generate_download_url(self, key: str, minutes: int = 60):
+        """
+        ダウンロード用の事前署名URLを生成
+
+        Args:
+            key: S3上のファイル名
+            minutes: URLの有効期限(分)
+
+        Returns:
+            ダウンロード用URL
+        """
+        try:
+            download_url = self.s3.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket, "Key": key},
+                ExpiresIn=minutes * 60,
+            )
+            return download_url
+        except Exception as e:
+            log.error(f"ダウンロードURL生成に失敗しました: {e}")
+            return None
+
     def generate_upload_url_for_client(
         self, key: str, file_extension: str, minutes: int = 60
     ):
@@ -95,3 +117,31 @@ class S3Utils:
             log.error(f"URL生成に失敗しました: {e}")
 
         return None
+
+    def download_file_by_key(self, key: str, output_dir: str):
+        """
+        S3からkeyを使ってファイルをダウンロード
+
+        Args:
+            key: s3上のファイル名
+            output_dir: ファイル保存先ディレクトリ
+
+        Returns:
+            True or False
+        """
+        import os
+
+        try:
+            # 出力ファイルパスを構築
+            output_path = os.path.join(output_dir, key)
+
+            # ディレクトリが存在しない場合は作成
+            os.makedirs(output_dir, exist_ok=True)
+
+            # S3からダウンロード
+            self.s3.download_file(self.bucket, key, output_path)
+            log.info(f"ファイルをダウンロードしました: {output_path}")
+            return True
+        except Exception as e:
+            log.error(f"ダウンロード失敗: {e}")
+            return False

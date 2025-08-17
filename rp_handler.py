@@ -99,15 +99,18 @@ def handler(event):
             # クライアントから拡張子を受け取る（デフォルトは.png）
             file_extension = input_data.get("upload_file_extension", ".png")
 
-            # 拡張子が.で始まっていない場合は追加
-            if not file_extension.startswith("."):
-                file_extension = f".{file_extension}"
-
+            # s3上でのファイル名を生成
             key = generate_uuid(file_extension=file_extension)
+
+            # アップロード用urlを作成
             upload_url = s3utils.generate_upload_url_for_client(
                 key=key, file_extension=file_extension
             )
-            return {"upload_url": upload_url, "key": key}
+
+            # ダウンロード用URLを生成
+            download_url = s3utils.generate_download_url(key=key)
+
+            return {"upload_url": upload_url, "download_url": download_url, "key": key}
 
         except Exception as e:
             log.error(f"アップロード用URL生成に失敗しました: {e}")
@@ -115,18 +118,18 @@ def handler(event):
 
     # サーバ側でGLBファイルからテクスチャを抽出してS3にアップロードする
     elif action == "create":
-        glb_dir = None
+        tmp_dir = None
 
         try:
             # glbファイルのurlを取得
             glb_url = fetch_3d_model(input_data=input_data)
 
             # URLからglbファイルを取得し、ディレクトリに保存
-            glb_dir, glb_filename = fetch_glb_from_url(glb_url)
+            tmp_dir, glb_filename = fetch_glb_from_url(glb_url)
 
             # glbファイルからテクスチャを取り出し、glbファイルと同じ場所にpng形式で保存
             textures_paths = extract_texture_from_glb(
-                glb_dir=glb_dir, glb_filename=glb_filename
+                glb_dir=tmp_dir, glb_filename=glb_filename
             )
 
             # テクスチャファイルをs3にアップロードし、ダウンロード用urlを取得
@@ -154,9 +157,9 @@ def handler(event):
 
         # 一時ファイルのクリーンアップ
         finally:
-            if glb_dir:
+            if tmp_dir:
                 try:
-                    clean(folder_list=[glb_dir])
+                    clean(folder_list=[tmp_dir])
                 except Exception as e:
                     # クリーンアップの失敗は無視
                     log.error(f"ファイル削除時にエラーが発生しました: {str(e)}")
