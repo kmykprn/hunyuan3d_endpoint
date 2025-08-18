@@ -52,9 +52,12 @@ PodrunのRequestタブで以下を入力して実行
 docker build --platform linux/amd64 --tag kmykprn/serverless-test .
 ```
 
-コンテナを立てる（ローカル実行時）
+コンテナを立てる（ローカル実行時, GPU実行）
 ```
-docker run -it --rm \
+docker run --gpus all --shm-size=4g -it --rm \
+  -e CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES \
+  -e DISPLAY \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
   -v $(pwd)/test_input.json:/test_input.json \
   -v $(pwd)/.env:/.env \
   kmykprn/serverless-test /bin/bash
