@@ -9,19 +9,14 @@ RUN pip install --upgrade setuptools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     build-essential \
-    libgl1-mesa-glx \
-    xvfb \
+    libosmesa6-dev \
+    libglu1-mesa-dev \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
     libgomp1 \
     wget \
     curl \
+    xvfb \
     && rm -rf /var/lib/apt/lists/*
-
-# pytorchをインストール
-RUN pip install torch==2.5.1 torchvision --index-url https://download.pytorch.org/whl/cu124
 
 # パッケージをインストール
 COPY requirements.txt /requirements.txt
@@ -54,7 +49,24 @@ RUN mkdir -p /root/.cache/huggingface/hub/models--stabilityai--TripoSR/snapshots
 COPY rp_handler.py /rp_handler.py
 COPY utils/ /utils/
 
-ENV CUDA_VISIBLE_DEVICES=0
+# 仮想ディスプレイサーバーを起動
+RUN echo '#!/bin/bash\n\
+# Xvfbを背景で起動\n\
+Xvfb :99 -screen 0 1024x768x24 &\n\
+export DISPLAY=:99\n\
+# 少し待ってからコマンド実行\n\
+sleep 2\n\
+exec "$@"' > /entrypoint.sh && \
+    chmod +x /entrypoint.sh
 
-# Start the container
+ENV CUDA_VISIBLE_DEVICES=0
+ENV MESA_GL_VERSION_OVERRIDE=3.3
+ENV MESA_GLSL_VERSION_OVERRIDE=330
+ENV PYOPENGL_PLATFORM=osmesa
+ENV DISPLAY=:99
+
+# コンテナ起動時に仮想サーバーを起動
+ENTRYPOINT ["/entrypoint.sh"]
+
+# コンテナで実行するコマンドを指定
 CMD ["python3", "-u", "rp_handler.py"]
