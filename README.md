@@ -88,6 +88,7 @@ docker push kmykprn/generate_3d_model:v0.0.1
 docker run --gpus all -it --rm \
   -v $(pwd)/test_input.json:/test_input.json \
   -v $(pwd)/.env:/.env \
+  -v $(pwd)/core/Hunyuan3D-2/hy3dgen/texgen/pipelines.py:/core/Hunyuan3D-2/hy3dgen/texgen/pipelines.py \
   kmykprn/generate_3d_model:v0.0.1 /bin/bash
 ```
 

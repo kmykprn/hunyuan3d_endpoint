@@ -80,31 +80,30 @@ RUN pip install -e /core/Hunyuan3D-2/ && \
 # ================= Stage 5: Hunyuan3DのDitの重み =================
 FROM models_triposr_hunyuan3d as models_triposr_hunyuan3d_dit
 
-# Hunyuan3D-2のモデルを事前ダウンロード
-RUN CUDA_VISIBLE_DEVICES="" python3 -c "\
-from huggingface_hub import snapshot_download; \
-print('Downloading model files only...'); \
-path = snapshot_download('tencent/Hunyuan3D-2mini', allow_patterns=['hunyuan3d-dit-v2-mini-fast/*']); \
-print('Downloaded to:', path)" && \
-    mkdir -p /root/.cache/hy3dgen/tencent && \
-    ln -sf /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/* \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2 && \
-    echo "Model files prepared for runtime loading"
+# 事前ダウンロードしたHunyuan3D-2のモデルをコピー
+COPY models/models--tencent--Hunyuan3D-2mini/ /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2mini/
 
-# ================= Stage 6: Hunyuan3Dの重み =================
+# シンボリックリンクを作成
+RUN mkdir -p /root/.cache/hy3dgen/tencent/Hunyuan3D-2mini && \
+    ln -sf /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2mini/snapshots/*/hunyuan3d-dit-v2-mini-fast \
+           /root/.cache/hy3dgen/tencent/Hunyuan3D-2mini/hunyuan3d-dit-v2-mini-fast
+
+# ================= Stage 6: Hunyuan3Dのテクスチャ生成器の重み =================
 FROM models_triposr_hunyuan3d_dit as models_triposr_hunyuan3d_dit_texture
 
-# Hunyuan3D-2のテクスチャモデルを事前ダウンロード
-RUN CUDA_VISIBLE_DEVICES="" python3 -c "\
-from huggingface_hub import snapshot_download; \
-print('Downloading texture model files only...'); \
-path = snapshot_download('tencent/Hunyuan3D-2'); \
-print('Downloaded to:', path)" && \
-    mkdir -p /root/.cache/hy3dgen/tencent && \
-    ln -sf /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/* \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2 && \
-    echo "Texture model files prepared for runtime loading"
+# 事前ダウンロードしたHunyuan3D-2のテクスチャモデルをコピー
+COPY models/models--tencent--Hunyuan3D-2/ /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/
 
+# シンボリックリンクを作成
+RUN  mkdir -p /root/.cache/hy3dgen/tencent/Hunyuan3D-2 && \
+    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-delight-v2-0 \
+           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/ && \
+    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-paint-v2-0 \
+           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/ && \
+    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-paint-v2-0-turbo \
+           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/
+
+ENV HY3DGEN_MODELS=/root/.cache/hy3dgen
 # ================= Stage 7: 最終イメージ =================
 FROM models_triposr_hunyuan3d_dit_texture as final
 

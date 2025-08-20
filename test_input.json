@@ -5,6 +5,6 @@
         "timeout": 300,
         "action": "create",
         "model_name": "hunyuan3d",
-        "use_texture": false
+        "use_texture": true
     }
 }
