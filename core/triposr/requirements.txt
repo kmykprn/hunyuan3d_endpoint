@@ -1,7 +1,7 @@
 omegaconf==2.3.0
 Pillow==11.3.0
 einops==0.8.1
-git+https://github.com/tatsy/torchmcubes.git@3381600ddc3d2e4d74222f8495866be5fafbace4
+torchmcubes @ git+https://github.com/tatsy/torchmcubes.git@3381600ddc3d2e4d74222f8495866be5fafbace4
 transformers==4.55.0
 trimesh==4.7.1
 rembg==2.0.67

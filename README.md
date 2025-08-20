@@ -70,6 +70,28 @@ source .env
 python3 -u rp_handler.py
 ```
 
+### (オプション)docker hubにイメージをpushする
+事前にdocker hubでリポジトリを作っておく
+
+ビルド
+```
+docker build --platform linux/amd64 --tag kmykprn/generate_3d_model:v0.0.1 .
+```
+
+push
+```
+docker push kmykprn/generate_3d_model:v0.0.1
+```
+
+実行する
+```
+docker run --gpus all -it --rm \
+  -v $(pwd)/test_input.json:/test_input.json \
+  -v $(pwd)/.env:/.env \
+  kmykprn/generate_3d_model:v0.0.1 /bin/bash
+```
+
+
 ### 備考：
 - ログを確認する
   - PodrunのLogsタブで確認する
