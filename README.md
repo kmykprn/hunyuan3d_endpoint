@@ -75,12 +75,12 @@ python3 -u rp_handler.py
 
 ビルド
 ```
-docker build --platform linux/amd64 --tag kmykprn/generate_3d_model:v0.0.1 .
+docker build -f Dockerfile.runpod --platform linux/amd64 --tag kmykprn/generate_3d_model:v0.0.2 .
 ```
 
 push
 ```
-docker push kmykprn/generate_3d_model:v0.0.1
+docker push kmykprn/generate_3d_model:v0.0.2
 ```
 
 実行する
@@ -88,8 +88,8 @@ docker push kmykprn/generate_3d_model:v0.0.1
 docker run --gpus all -it --rm \
   -v $(pwd)/test_input.json:/test_input.json \
   -v $(pwd)/.env:/.env \
-  -v $(pwd)/core/Hunyuan3D-2/hy3dgen/texgen/pipelines.py:/core/Hunyuan3D-2/hy3dgen/texgen/pipelines.py \
-  kmykprn/generate_3d_model:v0.0.1 /bin/bash
+  -v $(pwd)/models:/runpod-volume/models \
+  kmykprn/generate_3d_model:v0.0.2 /bin/bash
 ```
 
 ### 段階的ビルド（検証用）

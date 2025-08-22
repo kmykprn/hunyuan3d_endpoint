@@ -52,27 +52,10 @@ COPY rp_handler.py /rp_handler.py
 COPY utils/ /utils/
 COPY core/generators/ /core/generators/
 
-# 仮想ディスプレイサーバーを起動
-RUN echo '#!/bin/bash\n\
-# Xvfbを背景で起動\n\
-Xvfb :99 -screen 0 1024x768x24 &\n\
-export DISPLAY=:99\n\
-# 少し待ってからコマンド実行\n\
-sleep 2\n\
-exec "$@"' > /entrypoint.sh && \
-    chmod +x /entrypoint.sh
-
 ENV CUDA_VISIBLE_DEVICES=0
-ENV MESA_GL_VERSION_OVERRIDE=3.3
-ENV MESA_GLSL_VERSION_OVERRIDE=330
-ENV PYOPENGL_PLATFORM=osmesa
-ENV DISPLAY=:99
 ENV PYTHONPATH="/core/Hunyuan3D-2:/core/generators:$PYTHONPATH"
 ENV HY3DGEN_MODELS=/runpod-volume/models
 ENV HUGGINGFACE_HUB_CACHE=/runpod-volume/models/
-
-# コンテナ起動時に仮想サーバーを起動
-ENTRYPOINT ["/entrypoint.sh"]
 
 # コンテナで実行するコマンドを指定
 CMD ["python3", "-u", "rp_handler.py"]
