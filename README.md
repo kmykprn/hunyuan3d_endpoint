@@ -106,6 +106,12 @@ docker run --gpus all -it --rm \
   kmykprn/generate_3d_model:verify /bin/bash
 ```
 
+### deploy
+1. podsでkmykprn/generate_3d_model:v0.0.2をデプロイ
+2. コマンドで、models/download_hunyuan3d_weights.shを実行し、ネットワークボリュームに重みを保存
+3. サーバーレスエンドポイントを起動
+4. 
+
 
 ### 備考：
 - ログを確認する
