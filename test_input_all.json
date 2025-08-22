@@ -4,7 +4,8 @@
         "prompt": "",
         "timeout": 300,
         "action": "create",
-        "model_name": "hunyuan3d",
-        "use_texture": true
+        "keys": [],
+        "upload_file_extension": ".png",
+        "model_name": "triposr"
     }
 }

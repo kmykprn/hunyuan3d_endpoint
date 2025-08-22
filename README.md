@@ -52,9 +52,9 @@ PodrunのRequestタブで以下を入力して実行
 docker build --platform linux/amd64 --tag kmykprn/serverless-test .
 ```
 
-コンテナを立てる（ローカル実行時）
+コンテナを立てる（ローカル実行時, GPU実行）
 ```
-docker run -it --rm \
+docker run --gpus all -it --rm \
   -v $(pwd)/test_input.json:/test_input.json \
   -v $(pwd)/.env:/.env \
   kmykprn/serverless-test /bin/bash
@@ -70,5 +70,47 @@ source .env
 python3 -u rp_handler.py
 ```
 
-### 備考：ログを確認する
-PodrunのLogsタブで確認する
+### (オプション)docker hubにイメージをpushする
+事前にdocker hubでリポジトリを作っておく
+
+ビルド
+```
+docker build -f Dockerfile.runpod --platform linux/amd64 --tag kmykprn/generate_3d_model:v0.0.2 .
+```
+
+push
+```
+docker push kmykprn/generate_3d_model:v0.0.2
+```
+
+実行する
+```
+docker run --gpus all -it --rm \
+  -v $(pwd)/test_input.json:/test_input.json \
+  -v $(pwd)/.env:/.env \
+  -v $(pwd)/models:/runpod-volume/models \
+  kmykprn/generate_3d_model:v0.0.2 /bin/bash
+```
+
+### 段階的ビルド（検証用）
+```
+docker build --target dependencies --platform linux/amd64 --tag kmykprn/generate_3d_model:verify .
+```
+
+実行する
+```
+docker run --gpus all -it --rm \
+  -v $(pwd)/test_input.json:/test_input.json \
+  -v $(pwd)/.env:/.env \
+  -v $(pwd)/models:/runpod-volume/models \
+  kmykprn/generate_3d_model:verify /bin/bash
+```
+
+
+### 備考：
+- ログを確認する
+  - PodrunのLogsタブで確認する
+
+- precommitの使い方
+  - https://qiita.com/shun_sakamoto/items/23ba9341e6d5112f07cb
+
