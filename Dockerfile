@@ -26,40 +26,8 @@ FROM base as dependencies
 COPY requirements.txt /requirements.txt
 RUN pip install -r requirements.txt
 
-# ================= Stage 3: TripoSRとパッケージ =================
-FROM dependencies as models_triposr
-
-# core/triposrをコピーしてパッケージとしてインストール
-COPY core/triposr/ /core/triposr/
-RUN pip install -r /core/triposr/requirements.txt && \
-    pip install -e /core/triposr/
-
-# core/generatorsをコピー
-COPY core/generators/ /core/generators/
-
-# モデルファイルを事前にダウンロード
-# rembgのu2netモデルをダウンロード
-RUN mkdir -p /root/.u2net && \
-    wget -q --show-progress --progress=bar:force:noscroll \
-    https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx \
-    -O /root/.u2net/u2net.onnx
-
-# TripoSRのモデルファイルをダウンロード
-# Hugging Faceのキャッシュディレクトリ構造を作成
-RUN mkdir -p /root/.cache/huggingface/hub/models--stabilityai--TripoSR/snapshots/5b521936b01fbe1890f6f9baed0254ab6351c04a && \
-    mkdir -p /root/.cache/huggingface/hub/models--stabilityai--TripoSR/blobs && \
-    # config.yamlをダウンロード
-    wget -q --show-progress --progress=bar:force:noscroll \
-    https://huggingface.co/stabilityai/TripoSR/resolve/main/config.yaml \
-    -O /root/.cache/huggingface/hub/models--stabilityai--TripoSR/snapshots/5b521936b01fbe1890f6f9baed0254ab6351c04a/config.yaml && \
-    # model.ckptをダウンロード
-    wget -q --show-progress --progress=bar:force:noscroll \
-    https://huggingface.co/stabilityai/TripoSR/resolve/main/model.ckpt \
-    -O /root/.cache/huggingface/hub/models--stabilityai--TripoSR/snapshots/5b521936b01fbe1890f6f9baed0254ab6351c04a/model.ckpt
-
-
-# ================= Stage 4: Hunyuan3Dとパッケージ =================
-FROM models_triposr as models_triposr_hunyuan3d
+# ================= Stage 3: Hunyuan3Dとパッケージをインストール =================
+FROM dependencies as hunyuan3d_base
 
 ENV TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6;8.9;9.0"
 ENV FORCE_CUDA="1"
@@ -76,40 +44,13 @@ RUN pip install -e /core/Hunyuan3D-2/ && \
     cd /core/Hunyuan3D-2/hy3dgen/texgen/differentiable_renderer && \
     pip install .
 
-
-# ================= Stage 5: Hunyuan3DのDitの重み =================
-FROM models_triposr_hunyuan3d as models_triposr_hunyuan3d_dit
-
-# 事前ダウンロードしたHunyuan3D-2のモデルをコピー
-COPY models/models--tencent--Hunyuan3D-2mini/ /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2mini/
-
-# シンボリックリンクを作成
-RUN mkdir -p /root/.cache/hy3dgen/tencent/Hunyuan3D-2mini && \
-    ln -sf /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2mini/snapshots/*/hunyuan3d-dit-v2-mini-fast \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2mini/hunyuan3d-dit-v2-mini-fast
-
-# ================= Stage 6: Hunyuan3Dのテクスチャ生成器の重み =================
-FROM models_triposr_hunyuan3d_dit as models_triposr_hunyuan3d_dit_texture
-
-# 事前ダウンロードしたHunyuan3D-2のテクスチャモデルをコピー
-COPY models/models--tencent--Hunyuan3D-2/ /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/
-
-# シンボリックリンクを作成
-RUN  mkdir -p /root/.cache/hy3dgen/tencent/Hunyuan3D-2 && \
-    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-delight-v2-0 \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/ && \
-    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-paint-v2-0 \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/ && \
-    cp -rL /root/.cache/huggingface/hub/models--tencent--Hunyuan3D-2/snapshots/*/hunyuan3d-paint-v2-0-turbo \
-           /root/.cache/hy3dgen/tencent/Hunyuan3D-2/
-
-ENV HY3DGEN_MODELS=/root/.cache/hy3dgen
 # ================= Stage 7: 最終イメージ =================
-FROM models_triposr_hunyuan3d_dit_texture as final
+FROM hunyuan3d_base as final
 
 # 必要な素材をコピー
 COPY rp_handler.py /rp_handler.py
 COPY utils/ /utils/
+COPY core/generators/ /core/generators/
 
 # 仮想ディスプレイサーバーを起動
 RUN echo '#!/bin/bash\n\
@@ -126,7 +67,9 @@ ENV MESA_GL_VERSION_OVERRIDE=3.3
 ENV MESA_GLSL_VERSION_OVERRIDE=330
 ENV PYOPENGL_PLATFORM=osmesa
 ENV DISPLAY=:99
-ENV PYTHONPATH="/core/triposr:/core/Hunyuan3D-2:/core/generators:$PYTHONPATH"
+ENV PYTHONPATH="/core/Hunyuan3D-2:/core/generators:$PYTHONPATH"
+ENV HY3DGEN_MODELS=/runpod-volume/models
+ENV HUGGINGFACE_HUB_CACHE=/runpod-volume/models/
 
 # コンテナ起動時に仮想サーバーを起動
 ENTRYPOINT ["/entrypoint.sh"]

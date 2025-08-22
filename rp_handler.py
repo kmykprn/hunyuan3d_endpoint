@@ -6,8 +6,7 @@ from runpod import RunPodLogger
 from runpod.serverless.utils.rp_cleanup import clean
 
 # generatorsモジュールをインポート
-from core.generators import (external_generator, hunyuan_generator,
-                             triposr_generator)
+from core.generators import external_generator, hunyuan_generator
 from utils.boto3_utils import S3Utils
 from utils.env_validator import validate_environment
 from utils.glb_utils import fetch_glb_from_url
@@ -53,14 +52,7 @@ def create_glb_file(input_data: dict):
     # AIモデル名を取得（デフォルトはtriposr）
     model_name = input_data.get("model_name", "triposr")
 
-    if model_name == "triposr":
-        # ローカルでTripoSRを使用して3Dモデルを生成
-        glb_path = triposr_generator.create_3d_model(input_data=input_data)
-
-        # GLBファイルのディレクトリとファイル名を取得
-        tmp_dir = os.path.dirname(glb_path)
-
-    elif model_name == "hunyuan3d":
+    if model_name == "hunyuan3d":
         # ローカルでHunyuan3D-2を使用して3Dモデルを生成
         glb_path = hunyuan_generator.create_3d_model_hunyuan(input_data=input_data)
 
