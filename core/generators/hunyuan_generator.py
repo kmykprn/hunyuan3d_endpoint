@@ -272,20 +272,21 @@ def create_3d_model_hunyuan(input_data: dict):
     torch.set_default_device("cpu")
 
     # 形状生成ワーカを初期化
-    
-    i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-        model_path='tencent/Hunyuan3D-2mini',
-        subfolder='hunyuan3d-dit-v2-mini-fast',
-        use_safetensors=True,
-        device='cuda',
-    )
-
-    # i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
-    #     model_path='tencent/Hunyuan3D-2mini',
-    #     subfolder='hunyuan3d-dit-v2-mini',
-    #     use_safetensors=True,
-    #     device='cuda',
-    # )
+    modeltype = input_data.get("modeltype", "mini")
+    if modeltype == "mini":
+        i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+            model_path='tencent/Hunyuan3D-2mini',
+            subfolder='hunyuan3d-dit-v2-mini-fast',
+            use_safetensors=True,
+            device='cuda',
+        )
+    elif modeltype == "full":
+        i23d_worker = Hunyuan3DDiTFlowMatchingPipeline.from_pretrained(
+            model_path='tencent/Hunyuan3D-2',
+            subfolder='hunyuan3d-dit-v2-0',
+            use_safetensors=True,
+            device='cuda',
+        )
 
     i23d_worker.enable_flashvdm(mc_algo='dmc')
     i23d_worker.compile()
