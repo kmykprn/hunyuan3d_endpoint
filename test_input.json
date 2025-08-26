@@ -4,12 +4,6 @@
         "prompt": "",
         "timeout": 300,
         "action": "create",
-        "model_name": "hunyuan3d",
-        "use_texture": true,
-        "num_inference_steps": 25,
-        "octree_resolution": 256,
-        "num_chunks": 4000,
-        "texture_render_size": 1024,
-        "texture_size": 1024
+        "model_name": "hunyuan3d"
     }
 }
