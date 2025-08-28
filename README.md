@@ -88,7 +88,7 @@ docker push kmykprn/generate_3d_model:v0.0.3
 docker run --gpus all -it --rm \
   -v $(pwd)/test_input.json:/test_input.json \
   -v $(pwd)/.env:/.env \
-  -v ~/.cache/huggingface/hub:/runpod-volume \
+  -v ~/.cache/huggingface/hub:/runpod-volume/models \
   kmykprn/generate_3d_model:v0.0.3 /bin/bash
 ```
 
