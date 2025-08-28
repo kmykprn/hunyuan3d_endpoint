@@ -5,6 +5,7 @@
         "timeout": 300,
         "action": "create",
         "model_name": "hunyuan3d",
-        "modeltype": "full"
+        "modeltype": "mini",
+        "vramsettings": 5
     }
 }

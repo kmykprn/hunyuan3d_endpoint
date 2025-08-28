@@ -54,8 +54,8 @@ COPY core/generators/ /core/generators/
 
 ENV CUDA_VISIBLE_DEVICES=0
 ENV PYTHONPATH="/core/Hunyuan3D-2:/core/generators:$PYTHONPATH"
-ENV HY3DGEN_MODELS=/runpod-volume/models
-ENV HUGGINGFACE_HUB_CACHE=/runpod-volume/models/
+ENV HUGGINGFACE_HUB_CACHE=/runpod-volume/
+ENV HF_HOME=/runpod-volume/
 
 # コンテナで実行するコマンドを指定
 CMD ["python3", "-u", "rp_handler.py"]

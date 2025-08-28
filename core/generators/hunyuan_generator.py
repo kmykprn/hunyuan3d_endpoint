@@ -296,7 +296,7 @@ def create_3d_model_hunyuan(input_data: dict):
     rmbg_worker = BackgroundRemover()
     
     # モデルをオフロード
-    profile = 5
+    profile = input_data.get("vramsettings", 5)
     kwargs = {}
     replace_property_getter(i23d_worker, "_execution_device", lambda self : "cuda")
     pipe = offload.extract_models("i23d_worker", i23d_worker)
